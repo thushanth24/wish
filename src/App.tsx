@@ -823,7 +823,7 @@ function LittleWorld() {
   const activeMemory = memories[activeMemoryIndex]
   const activeMemoryUnlocked = unlockedMemories.includes(activeMemoryIndex)
   const normalizedMemoryAnswer = normalizePuzzleAnswer(CONFIG.yourName)
-  const finalGiftUrl = CONFIG.giftUrl || CONFIG.videoUrl || CONFIG.playlistUrl
+
   const deliveryStatusText = giftDelivered
     ? 'Delivered to the birthday girl.'
     : deliveryInProgress
