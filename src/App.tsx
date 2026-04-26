@@ -12,13 +12,28 @@ const CONFIG = {
   herName: import.meta.env.VITE_HER_NAME || 'birthday girl',
   yourName: import.meta.env.VITE_YOUR_NAME || 'THUSHANTH',
   secretWord: (import.meta.env.VITE_SECRET_WORD || 'moonlight').trim(),
+  puzzleAnswer: (
+    import.meta.env.VITE_PUZZLE_ANSWER ||
+    import.meta.env.VITE_YOUR_NAME ||
+    'THUSHANTH'
+  ).trim(),
   birthdayDate: import.meta.env.VITE_BIRTHDAY_DATE || '2026-04-27',
   unlockAtIso: import.meta.env.VITE_UNLOCK_AT_ISO || '',
   previewUnlock: import.meta.env.VITE_PREVIEW_UNLOCK === 'true',
+  testTimerEnded: import.meta.env.VITE_TEST_TIMER_ENDED === 'true',
   videoUrl: import.meta.env.VITE_FINAL_VIDEO_URL || '',
   playlistUrl: import.meta.env.VITE_PLAYLIST_URL || '',
   giftUrl: import.meta.env.VITE_GIFT_URL || '',
 }
+
+const acceptedPuzzleAnswers = [
+  CONFIG.puzzleAnswer,
+  CONFIG.yourName,
+  CONFIG.secretWord,
+  'you',
+]
+  .map((answer) => normalizePuzzleAnswer(answer))
+  .filter(Boolean)
 
 type Reason = {
   title: string
@@ -37,6 +52,13 @@ type Letter = {
   signature: string
 }
 
+type LetterChallenge = {
+  question: string
+  options: string[]
+  correctIndex: number
+  tease: string
+}
+
 type DateOption = {
   id: string
   title: string
@@ -45,14 +67,6 @@ type DateOption = {
   note: string
   promise: string
   location: string
-}
-
-type Gift = {
-  id: string
-  title: string
-  label: string
-  href?: string
-  fallback: string
 }
 
 const reasons: Reason[] = [
@@ -139,6 +153,14 @@ const memories = [
   },
 ]
 
+const memoryUnlockQuestions = [
+  'Who is dangerously obsessed with your smile?',
+  'Who misses you like it is his full-time job?',
+  'Who would fly from Sri Lanka just to annoy you lovingly?',
+  'Who made this because he is clearly down bad for you?',
+  'Who thinks you are the prettiest trouble in his life?',
+]
+
 const letters: Letter[] = [
   {
     id: 'miss-me',
@@ -214,6 +236,75 @@ const letters: Letter[] = [
   },
 ]
 
+const letterChallenges: Record<string, LetterChallenge> = {
+  'miss-me': {
+    question: 'Before this opens... who are you missing this much?',
+    options: [
+      'Nobody. I am totally fine.',
+      'The dramatic boy from Sri Lanka.',
+      'Maybe snacks. Maybe sleep.',
+    ],
+    correctIndex: 1,
+    tease:
+      'Nice try. The letter is being stubborn until you admit the obvious one.',
+  },
+  smile: {
+    question: 'Who is most responsible for stealing your smile?',
+    options: [
+      'Random weather.',
+      'Absolutely not Thushanth.',
+      'Fine... Thushanth, just open the letter.',
+    ],
+    correctIndex: 2,
+    tease:
+      'Incorrect. The smile department has rejected this answer for lack of romance.',
+  },
+  lonely: {
+    question: 'When you feel lonely, who should this letter bring closer?',
+    options: [
+      'A very normal human named Thushanth.',
+      'No one, I enjoy suffering dramatically.',
+      'The moon, but only if it texts back.',
+    ],
+    correctIndex: 0,
+    tease:
+      'That answer is suspiciously independent. Choose the one who is already yours.',
+  },
+  'heavy-day': {
+    question: 'Who would carry the heavy day if he could?',
+    options: [
+      'A responsible cloud.',
+      'Thushanth, obviously, but do not tell him.',
+      'The pillow. It looks strong.',
+    ],
+    correctIndex: 1,
+    tease:
+      'Nope. The heavy-day rescue team only accepts one very lovesick applicant.',
+  },
+  loved: {
+    question: 'Who is trying extremely hard to make you feel loved?',
+    options: [
+      'Thushanth, and yes he is being extra.',
+      'A mysterious stranger with suspiciously familiar handwriting.',
+      'The website coded itself.',
+    ],
+    correctIndex: 0,
+    tease:
+      'The website did not write love letters by itself. Try the softer answer.',
+  },
+  'birthday-hug': {
+    question: 'Who owes you the biggest birthday hug?',
+    options: [
+      'The delivery plane.',
+      'Thushanth. Long hug. No escaping.',
+      'Nobody, hugs are cancelled.',
+    ],
+    correctIndex: 1,
+    tease:
+      'Hugs are not cancelled. Please choose the boy who owes you one properly.',
+  },
+}
+
 const dateOptions: DateOption[] = [
   {
     id: 'movie',
@@ -271,32 +362,14 @@ const dateOptions: DateOption[] = [
   },
 ]
 
-const gifts: Gift[] = [
-  {
-    id: 'video',
-    title: 'Private video message',
-    label: 'Open video',
-    href: CONFIG.videoUrl,
-    fallback:
-      'This little screen is reserved for the private video message I made for you.',
-  },
-  {
-    id: 'playlist',
-    title: 'Birthday playlist',
-    label: 'Play playlist',
-    href: CONFIG.playlistUrl,
-    fallback:
-      'A playlist belongs here, filled with songs that sound like us and this birthday.',
-  },
-  {
-    id: 'gift',
-    title: 'Future date coupon',
-    label: 'Reveal coupon',
-    href: CONFIG.giftUrl,
-    fallback:
-      'One future date coupon, valid anytime you miss me, redeemable under the same sky.',
-  },
+const deliverySteps = [
+  'Crossing oceans...',
+  'Passing clouds...',
+  'Almost there...',
+  'Delivered to the birthday girl.',
 ]
+
+const confettiPieces = Array.from({ length: 18 }, (_, index) => index)
 
 function useStoredState<T>(key: string, initialValue: T) {
   const [value, setValue] = useState<T>(() => {
@@ -404,6 +477,10 @@ function formatCountdown(target: Date, now: Date) {
   ]
 }
 
+function normalizePuzzleAnswer(value: string) {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
 function FloatingSky() {
   return (
     <div className="floating-sky" aria-hidden="true">
@@ -454,6 +531,82 @@ function CountdownScreen({
   )
 }
 
+function BirthdayPuzzleScreen({
+  puzzleInput,
+  puzzleError,
+  isUnlocking,
+  onPuzzleChange,
+  onSubmit,
+}: {
+  puzzleInput: string
+  puzzleError: string
+  isUnlocking: boolean
+  onPuzzleChange: (value: string) => void
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void
+}) {
+  return (
+    <main className={`puzzle-screen ${isUnlocking ? 'is-unlocking' : ''}`}>
+      <FloatingSky />
+      <div className="birthday-sparkles" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+        <span />
+        <span />
+        <span />
+      </div>
+      <section
+        className="birthday-puzzle-panel"
+        aria-labelledby="birthday-puzzle-title"
+      >
+        <div className="birthday-cake" aria-hidden="true">
+          <span className="cake-flame" />
+          <span className="cake-candle" />
+          <span className="cake-top" />
+          <span className="cake-base" />
+        </div>
+        <p className="eyebrow">The birthday moment is here</p>
+        <h1 id="birthday-puzzle-title">
+          Happy birthday, {CONFIG.herName}.
+        </h1>
+        <p className="lead">
+          The timer is over, so this little world is waking up with a wish made
+          only for you.
+        </p>
+        <p className="birthday-wish">
+          May today feel soft, loved, and impossible to forget.
+        </p>
+
+        <form className="puzzle-form" onSubmit={onSubmit}>
+          <label htmlFor="love-puzzle">
+            Who is loving more between us?
+          </label>
+          <div className="puzzle-row">
+            <input
+              id="love-puzzle"
+              autoComplete="off"
+              value={puzzleInput}
+              onChange={(event) => onPuzzleChange(event.target.value)}
+              placeholder="type the correct answer"
+            />
+            <button disabled={isUnlocking} type="submit">
+              Unlock
+            </button>
+          </div>
+          {puzzleError ? <p className="form-error">{puzzleError}</p> : null}
+        </form>
+
+        {isUnlocking ? (
+          <div className="puzzle-unlock-message" aria-live="polite">
+            <span aria-hidden="true">♥</span>
+            <strong>Correct. Opening the secret garden...</strong>
+          </div>
+        ) : null}
+      </section>
+    </main>
+  )
+}
+
 function SecretGate({
   secretInput,
   secretError,
@@ -466,7 +619,7 @@ function SecretGate({
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
 }) {
   return (
-    <main className="gate-screen">
+    <main className="gate-screen gate-screen-unlocked">
       <FloatingSky />
       <section className="gate-panel" aria-labelledby="gate-title">
         <div className="garden-gate" aria-hidden="true">
@@ -679,13 +832,100 @@ function LittleWorld() {
     [],
   )
   const [activeLetter, setActiveLetter] = useState<Letter | null>(null)
+  const [letterChallenge, setLetterChallenge] = useState<Letter | null>(null)
+  const [letterChallengeError, setLetterChallengeError] = useState('')
   const [selectedDate, setSelectedDate] = useStoredState<string>(
     'little-world-date-ticket',
     '',
   )
-  const [activeGift, setActiveGift] = useState<Gift>(gifts[0])
+  const [unlockedMemories, setUnlockedMemories] = useStoredState<number[]>(
+    'little-world-unlocked-memories',
+    [],
+  )
+  const [memoryAnswers, setMemoryAnswers] = useState<Record<number, string>>({})
+  const [memoryErrors, setMemoryErrors] = useState<Record<number, string>>({})
+  const [giftDelivered, setGiftDelivered] = useStoredState(
+    'little-world-final-gift-delivered',
+    false,
+  )
+  const [deliveryInProgress, setDeliveryInProgress] = useState(false)
+  const [deliveryStepIndex, setDeliveryStepIndex] = useState(
+    giftDelivered ? deliverySteps.length - 1 : 0,
+  )
 
   const chosenDate = dateOptions.find((date) => date.id === selectedDate)
+  const [activeMemoryIndex, setActiveMemoryIndex] = useState(0)
+  const selectedReasonIndex = Math.max(
+    0,
+    reasons.findIndex((reason) => reason.title === selectedReason.title),
+  )
+  const activeMemory = memories[activeMemoryIndex]
+  const activeMemoryUnlocked = unlockedMemories.includes(activeMemoryIndex)
+  const normalizedMemoryAnswer = normalizePuzzleAnswer(CONFIG.yourName)
+  const finalGiftUrl = CONFIG.giftUrl || CONFIG.videoUrl || CONFIG.playlistUrl
+  const deliveryStatusText = giftDelivered
+    ? 'Delivered to the birthday girl.'
+    : deliveryInProgress
+      ? deliverySteps[deliveryStepIndex]
+      : 'Ready for takeoff.'
+  const deliveryProgress = giftDelivered
+    ? 100
+    : deliveryInProgress
+      ? ((deliveryStepIndex + 1) / deliverySteps.length) * 100
+      : 0
+
+  const showPreviousMemory = () => {
+    setActiveMemoryIndex((current) =>
+      current === 0 ? memories.length - 1 : current - 1,
+    )
+  }
+
+  const showNextMemory = () => {
+    setActiveMemoryIndex((current) => (current + 1) % memories.length)
+  }
+
+  const updateMemoryAnswer = (index: number, value: string) => {
+    setMemoryAnswers((current) => ({
+      ...current,
+      [index]: value,
+    }))
+    setMemoryErrors((current) => ({
+      ...current,
+      [index]: '',
+    }))
+  }
+
+  const unlockMemory = (event: FormEvent<HTMLFormElement>, index: number) => {
+    event.preventDefault()
+
+    if (
+      normalizePuzzleAnswer(memoryAnswers[index] || '') ===
+      normalizedMemoryAnswer
+    ) {
+      setUnlockedMemories((current) =>
+        current.includes(index) ? current : [...current, index],
+      )
+      setMemoryErrors((current) => ({
+        ...current,
+        [index]: '',
+      }))
+      return
+    }
+
+    setMemoryErrors((current) => ({
+      ...current,
+      [index]: 'Hint: type the name of the one who made this for you.',
+    }))
+  }
+
+  const startGiftDelivery = () => {
+    if (deliveryInProgress || giftDelivered) {
+      return
+    }
+
+    setDeliveryStepIndex(0)
+    setDeliveryInProgress(true)
+  }
 
   useEffect(() => {
     const world = worldRef.current
@@ -752,26 +992,65 @@ function LittleWorld() {
   }, [])
 
   useEffect(() => {
-    if (!activeLetter) {
+    if (!activeLetter && !letterChallenge) {
       return
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setActiveLetter(null)
+        setLetterChallenge(null)
+        setLetterChallengeError('')
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
 
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [activeLetter])
+  }, [activeLetter, letterChallenge])
+
+  useEffect(() => {
+    if (!deliveryInProgress) {
+      return
+    }
+
+    const timers = deliverySteps.map((_, index) =>
+      window.setTimeout(() => {
+        setDeliveryStepIndex(index)
+
+        if (index === deliverySteps.length - 1) {
+          setDeliveryInProgress(false)
+          setGiftDelivered(true)
+        }
+      }, index * 1050),
+    )
+
+    return () => timers.forEach((timer) => window.clearTimeout(timer))
+  }, [deliveryInProgress, setGiftDelivered])
+
+  const openLetterChallenge = (letter: Letter) => {
+    setLetterChallenge(letter)
+    setLetterChallengeError('')
+  }
 
   const openLetter = (letter: Letter) => {
     setOpenedLetters((current) =>
       current.includes(letter.id) ? current : [...current, letter.id],
     )
+    setLetterChallenge(null)
+    setLetterChallengeError('')
     setActiveLetter(letter)
+  }
+
+  const answerLetterChallenge = (letter: Letter, optionIndex: number) => {
+    const challenge = letterChallenges[letter.id]
+
+    if (optionIndex === challenge.correctIndex) {
+      openLetter(letter)
+      return
+    }
+
+    setLetterChallengeError(challenge.tease)
   }
 
   const sceneClass = (scene: string, className: string) =>
@@ -834,39 +1113,57 @@ function LittleWorld() {
         </SectionHeading>
         <div className="garden-layout">
           <div className="flower-grid">
-            {reasons.map((reason, index) => (
-              <button
-                className={`flower-button flower-${reason.color} ${
-                  selectedReason.title === reason.title ? 'is-selected' : ''
-                }`}
-                key={reason.title}
-                onClick={() => setSelectedReason(reason)}
-                type="button"
-              >
-                <span className="flower-art" aria-hidden="true">
-                  <span className="petal petal-one" />
-                  <span className="petal petal-two" />
-                  <span className="petal petal-three" />
-                  <span className="petal petal-four" />
-                  <span className="flower-center" />
-                  <span className="flower-stem" />
-                  <span className="flower-leaf" />
-                </span>
-                <span className="reason-number">
-                  {String(index + 1).padStart(2, '0')}
-                </span>
-                <span className="reason-copy">
-                  <span className="reason-title">{reason.title}</span>
-                  <span className="reason-proof">{reason.proof}</span>
-                </span>
-              </button>
-            ))}
+            {reasons.map((reason, index) => {
+              const isSelected = selectedReason.title === reason.title
+
+              return (
+                <button
+                  aria-pressed={isSelected}
+                  className={`flower-button flower-${reason.color} ${
+                    isSelected ? 'is-selected' : ''
+                  }`}
+                  key={reason.title}
+                  onClick={() => setSelectedReason(reason)}
+                  type="button"
+                >
+                  <span className="flower-art" aria-hidden="true">
+                    <span className="petal petal-one" />
+                    <span className="petal petal-two" />
+                    <span className="petal petal-three" />
+                    <span className="petal petal-four" />
+                    <span className="flower-center" />
+                    <span className="flower-stem" />
+                    <span className="flower-leaf" />
+                  </span>
+                  <span className="reason-number">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <span className="reason-copy">
+                    <span className="reason-title">{reason.title}</span>
+                    <span className="reason-proof">{reason.proof}</span>
+                  </span>
+                </button>
+              )
+            })}
           </div>
-          <aside className={`bloom-note flower-${selectedReason.color}`}>
-            <span className="note-kicker">A real reason</span>
+          <aside
+            aria-live="polite"
+            className={`bloom-note flower-${selectedReason.color}`}
+          >
+            <div className="bloom-note-top">
+              <span className="note-kicker">A real reason</span>
+              <span className="bloom-count">
+                {String(selectedReasonIndex + 1).padStart(2, '0')} /{' '}
+                {String(reasons.length).padStart(2, '0')}
+              </span>
+            </div>
             <h3>{selectedReason.title}</h3>
             <p>{selectedReason.note}</p>
             <p>{selectedReason.detail}</p>
+            <div className="bloom-proof">
+              <span>What I keep noticing</span>
+              <strong>{selectedReason.proof}</strong>
+            </div>
           </aside>
         </div>
       </section>
@@ -879,18 +1176,130 @@ function LittleWorld() {
         <SectionHeading eyebrow="Little memory album" title="Memory Polaroids">
           Soft snapshots of us, waiting for your real photos and all the moments still coming.
         </SectionHeading>
-        <div className="polaroid-grid">
-          {memories.map((memory) => (
-            <figure className="polaroid" key={memory.title}>
-              <div className="memory-photo">
-                <img src={memory.image} alt={memory.alt} loading="lazy" />
-              </div>
-              <figcaption>
-                <strong>{memory.title}</strong>
-                <span>{memory.caption}</span>
-              </figcaption>
-            </figure>
-          ))}
+        <div
+          aria-label="Memory photo viewer"
+          aria-roledescription="carousel"
+          className="memory-viewer"
+        >
+          <button
+            aria-label="Show previous memory"
+            className="memory-nav memory-nav-previous"
+            onClick={showPreviousMemory}
+            type="button"
+          >
+            <span className="memory-arrow memory-arrow-left" aria-hidden="true" />
+          </button>
+
+          <div className="memory-window">
+            <div
+              className="memory-track"
+              style={{ transform: `translateX(-${activeMemoryIndex * 100}%)` }}
+            >
+              {memories.map((memory, index) => {
+                const isMemoryUnlocked = unlockedMemories.includes(index)
+
+                return (
+                  <figure
+                    aria-hidden={activeMemoryIndex !== index}
+                    className={`polaroid memory-slide ${
+                      activeMemoryIndex === index ? 'is-active' : ''
+                    } ${isMemoryUnlocked ? 'is-unlocked' : 'is-locked'}`}
+                    key={memory.title}
+                  >
+                    {isMemoryUnlocked ? (
+                      <>
+                        <div className="memory-photo">
+                          <img
+                            src={memory.image}
+                            alt={memory.alt}
+                            loading="lazy"
+                          />
+                        </div>
+                        <figcaption>
+                          <strong>{memory.title}</strong>
+                          <span>{memory.caption}</span>
+                        </figcaption>
+                      </>
+                    ) : (
+                      <div className="memory-lock-panel">
+                        <span className="memory-lock-icon" aria-hidden="true">
+                          ♥
+                        </span>
+                        <p className="memory-lock-kicker">
+                          Memory {String(index + 1).padStart(2, '0')} is locked
+                        </p>
+                        <h3>{memoryUnlockQuestions[index]}</h3>
+                        <p>
+                          Answer correctly to reveal this photo for the first
+                          time.
+                        </p>
+                        <form
+                          className="memory-lock-form"
+                          onSubmit={(event) => unlockMemory(event, index)}
+                        >
+                          <label htmlFor={`memory-answer-${index}`}>
+                            Your answer
+                          </label>
+                          <div className="memory-lock-row">
+                            <input
+                              id={`memory-answer-${index}`}
+                              autoComplete="off"
+                              value={memoryAnswers[index] || ''}
+                              onChange={(event) =>
+                                updateMemoryAnswer(index, event.target.value)
+                              }
+                            />
+                            <button type="submit">Reveal</button>
+                          </div>
+                          {memoryErrors[index] ? (
+                            <p className="form-error">{memoryErrors[index]}</p>
+                          ) : null}
+                        </form>
+                      </div>
+                    )}
+                  </figure>
+                )
+              })}
+            </div>
+          </div>
+
+          <button
+            aria-label="Show next memory"
+            className="memory-nav memory-nav-next"
+            onClick={showNextMemory}
+            type="button"
+          >
+            <span className="memory-arrow memory-arrow-right" aria-hidden="true" />
+          </button>
+
+          <div className="memory-viewer-footer">
+            <span aria-live="polite" className="memory-counter">
+              {String(activeMemoryIndex + 1).padStart(2, '0')} /{' '}
+              {String(memories.length).padStart(2, '0')}
+            </span>
+            <div className="memory-dots" aria-label="Choose a memory">
+              {memories.map((memory, index) => (
+                <button
+                  aria-label={`Show memory ${index + 1}: ${memory.title}`}
+                  aria-pressed={activeMemoryIndex === index}
+                  className={`${activeMemoryIndex === index ? 'is-active' : ''} ${
+                    unlockedMemories.includes(index) ? 'is-unlocked' : 'is-locked'
+                  }`}
+                  key={memory.title}
+                  onClick={() => setActiveMemoryIndex(index)}
+                  type="button"
+                />
+              ))}
+            </div>
+          </div>
+          <p className="memory-active-title" aria-live="polite">
+            {activeMemoryUnlocked
+              ? activeMemory.title
+              : `Locked memory ${String(activeMemoryIndex + 1).padStart(
+                  2,
+                  '0',
+                )}`}
+          </p>
         </div>
       </section>
 
@@ -909,7 +1318,7 @@ function LittleWorld() {
               <button
                 className={`letter-card ${isOpen ? 'is-open' : ''}`}
                 key={letter.id}
-                onClick={() => openLetter(letter)}
+                onClick={() => openLetterChallenge(letter)}
                 type="button"
               >
                 <span className="envelope" aria-hidden="true">
@@ -923,6 +1332,66 @@ function LittleWorld() {
           })}
         </div>
       </section>
+
+      {letterChallenge ? (
+        <div
+          className="letter-dialog-backdrop"
+          role="presentation"
+          onClick={() => {
+            setLetterChallenge(null)
+            setLetterChallengeError('')
+          }}
+        >
+          <article
+            aria-labelledby="letter-quiz-title"
+            aria-modal="true"
+            className="letter-quiz-dialog"
+            role="dialog"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              className="letter-dialog-close"
+              type="button"
+              onClick={() => {
+                setLetterChallenge(null)
+                setLetterChallengeError('')
+              }}
+            >
+              Close
+            </button>
+            <div className="letter-quiz-seal" aria-hidden="true">
+              ?
+            </div>
+            <p className="letter-dialog-mood">Tiny love checkpoint</p>
+            <h3 id="letter-quiz-title">
+              {letterChallenges[letterChallenge.id].question}
+            </h3>
+            <div className="letter-quiz-options">
+              {letterChallenges[letterChallenge.id].options.map(
+                (option, index) => (
+                  <button
+                    key={option}
+                    onClick={() => answerLetterChallenge(letterChallenge, index)}
+                    type="button"
+                  >
+                    {option}
+                  </button>
+                ),
+              )}
+            </div>
+            {letterChallengeError ? (
+              <p className="letter-quiz-error" aria-live="polite">
+                {letterChallengeError}
+              </p>
+            ) : (
+              <p className="letter-quiz-note">
+                One answer is clearly correct. You may resist it, but the letter
+                will not.
+              </p>
+            )}
+          </article>
+        </div>
+      ) : null}
 
       {activeLetter ? (
         <div
@@ -1027,53 +1496,119 @@ function LittleWorld() {
       </section>
 
       <section
-        className={sceneClass('gift', 'gift-section')}
+        className={sceneClass(
+          'gift',
+          `gift-section ${deliveryInProgress ? 'is-delivering' : ''} ${
+            giftDelivered ? 'is-delivered' : ''
+          }`,
+        )}
         data-scene="gift"
         aria-labelledby="gift-title"
       >
-        <SectionHeading eyebrow="The final little room" title="Final Gift Room">
-          You reached the final little room. This website was my first gift, but your final surprise is waiting here.
+        <SectionHeading
+          eyebrow="A gift flew from Sri Lanka to the UK"
+          title="Special Delivery"
+        >
+          From Sri Lanka to the UK, one final surprise is on the way.
         </SectionHeading>
-        <div className="gift-grid">
-          {gifts.map((gift) =>
-            gift.href ? (
-              <a
-                className="gift-tile"
-                href={gift.href}
-                key={gift.id}
-                rel="noreferrer"
-                target="_blank"
-              >
-                <span aria-hidden="true">✦</span>
-                <strong>{gift.title}</strong>
-                <small>{gift.label}</small>
-              </a>
-            ) : (
-              <button
-                className={`gift-tile ${
-                  activeGift.id === gift.id ? 'is-selected' : ''
-                }`}
-                key={gift.id}
-                onClick={() => setActiveGift(gift)}
-                type="button"
-              >
-                <span aria-hidden="true">✦</span>
-                <strong>{gift.title}</strong>
-                <small>{gift.label}</small>
-              </button>
-            ),
-          )}
-        </div>
-        <div className="gift-reveal" aria-live="polite">
-          <div className="gift-box" aria-hidden="true">
-            <span />
+
+        <div className="delivery-card">
+          <div className="delivery-map" aria-label="Sri Lanka to United Kingdom">
+            <div className="delivery-place delivery-from">
+              <span className="delivery-flag" aria-hidden="true">
+                🇱🇰
+              </span>
+              <span>Sri Lanka</span>
+              <strong>{CONFIG.yourName}</strong>
+            </div>
+
+            <div className="delivery-route" aria-hidden="true">
+              <span className="delivery-cloud delivery-cloud-one">☁</span>
+              <span className="delivery-cloud delivery-cloud-two">☁</span>
+              <span className="delivery-line">
+                <span
+                  className="delivery-progress"
+                  style={{ width: `${deliveryProgress}%` }}
+                />
+              </span>
+              <span className="delivery-plane">✈</span>
+            </div>
+
+            <div className="delivery-place delivery-to">
+              <span className="delivery-flag" aria-hidden="true">
+                🇬🇧
+              </span>
+              <span>United Kingdom</span>
+              <strong>{CONFIG.herName}</strong>
+            </div>
           </div>
-          <p>{activeGift.fallback}</p>
+
+          <div className="delivery-copy">
+            <p className="delivery-status" aria-live="polite">
+              {giftDelivered
+                ? 'Delivered successfully 💌'
+                : deliveryStatusText}
+            </p>
+            <h3>
+              {giftDelivered
+                ? 'Your final gift has arrived.'
+                : 'Sri Lanka 🇱🇰 → United Kingdom 🇬🇧'}
+            </h3>
+            <button
+              className="delivery-button"
+              disabled={deliveryInProgress || giftDelivered}
+              onClick={startGiftDelivery}
+              type="button"
+            >
+              {giftDelivered
+                ? 'Delivered successfully'
+                : deliveryInProgress
+                  ? 'Delivering...'
+                  : 'Deliver my birthday surprise'}
+            </button>
+          </div>
+
+          {giftDelivered ? (
+            <div className="delivery-reveal" aria-live="polite">
+              <span className="delivery-seal" aria-hidden="true">
+                💌
+              </span>
+              <div>
+                <p>
+                  No matter how far Sri Lanka is from the UK, I still found a
+                  way to make today reach you.
+                </p>
+                <p>
+                  Happy birthday. This little gift travelled all the way from me
+                  to you.
+                </p>
+                {finalGiftUrl ? (
+                  <a
+                    className="delivery-gift-link"
+                    href={finalGiftUrl}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    Open your final gift
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
+          {giftDelivered ? (
+            <div className="delivery-confetti" aria-hidden="true">
+              {confettiPieces.map((piece) => (
+                <span key={piece} />
+              ))}
+            </div>
+          ) : null}
+
+          <div className="delivery-badges" aria-label="Delivery details">
+            <span>Delivery status: Emotionally shipped.</span>
+            <span>Distance: Too far. Effort: 100%.</span>
+          </div>
         </div>
-        <footer className="site-footer">
-          <span>Bug fixed: birthday girl not smiling enough.</span>
-          <span>Smile loading... 100%.</span>
-        </footer>
       </section>
     </main>
   )
@@ -1082,6 +1617,13 @@ function LittleWorld() {
 function App() {
   const unlockDate = useMemo(() => getUnlockDate(), [])
   const [now, setNow] = useState(() => new Date())
+  const [puzzleInput, setPuzzleInput] = useState('')
+  const [puzzleError, setPuzzleError] = useState('')
+  const [isPuzzleUnlocking, setIsPuzzleUnlocking] = useState(false)
+  const [puzzleSolved, setPuzzleSolved] = useStoredState(
+    'little-world-puzzle-solved',
+    false,
+  )
   const [secretInput, setSecretInput] = useState('')
   const [secretError, setSecretError] = useState('')
   const [gateOpen, setGateOpen] = useStoredState(
@@ -1089,13 +1631,45 @@ function App() {
     false,
   )
 
-  const isTimeUnlocked = CONFIG.previewUnlock || now >= unlockDate
+  const isTimeUnlocked =
+    CONFIG.previewUnlock || CONFIG.testTimerEnded || now >= unlockDate
   const normalizedSecret = CONFIG.secretWord.toLowerCase()
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000)
     return () => window.clearInterval(timer)
   }, [])
+
+  useEffect(() => {
+    if (!CONFIG.testTimerEnded) {
+      return
+    }
+
+    setGateOpen(false)
+    setPuzzleSolved(false)
+  }, [setGateOpen, setPuzzleSolved])
+
+  const handlePuzzleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    if (isPuzzleUnlocking) {
+      return
+    }
+
+    if (acceptedPuzzleAnswers.includes(normalizePuzzleAnswer(puzzleInput))) {
+      setPuzzleError('')
+      setIsPuzzleUnlocking(true)
+      window.setTimeout(() => {
+        setPuzzleSolved(true)
+        setIsPuzzleUnlocking(false)
+      }, 1150)
+      return
+    }
+
+    setPuzzleError(
+      'Almost. Hint: type the name of the person who made this little world.',
+    )
+  }
 
   const handleSecretSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -1106,11 +1680,23 @@ function App() {
       return
     }
 
-    setSecretError('The gate is still shy. Try the secret word only we know.')
+    setSecretError('Hint: it is a soft little word that starts with B and rhymes with funny.')
   }
 
   if (!isTimeUnlocked) {
     return <CountdownScreen now={now} target={unlockDate} />
+  }
+
+  if (!gateOpen && !puzzleSolved) {
+    return (
+      <BirthdayPuzzleScreen
+        isUnlocking={isPuzzleUnlocking}
+        puzzleError={puzzleError}
+        puzzleInput={puzzleInput}
+        onPuzzleChange={setPuzzleInput}
+        onSubmit={handlePuzzleSubmit}
+      />
+    )
   }
 
   if (!gateOpen) {
