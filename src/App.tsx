@@ -238,70 +238,70 @@ const letters: Letter[] = [
 
 const letterChallenges: Record<string, LetterChallenge> = {
   'miss-me': {
-    question: 'Before this opens... who are you missing this much?',
+    question: 'Why are you opening this letter?',
     options: [
-      'Nobody. I am totally fine.',
-      'The dramatic boy from Sri Lanka.',
-      'Maybe snacks. Maybe sleep.',
-    ],
-    correctIndex: 1,
-    tease:
-      'Nice try. The letter is being stubborn until you admit the obvious one.',
-  },
-  smile: {
-    question: 'Who is most responsible for stealing your smile?',
-    options: [
-      'Random weather.',
-      'Absolutely not Thushanth.',
-      'Fine... Thushanth, just open the letter.',
+      'Because I miss him so much.',
+      'Because I am emotionally strong and totally normal.',
+      'Because the envelope looked lonely and needed attention.',
     ],
     correctIndex: 2,
     tease:
-      'Incorrect. The smile department has rejected this answer for lack of romance.',
+      'Too obvious. This letter is dramatic and refuses to open for the sensible answer.',
+  },
+  smile: {
+    question: 'What happens to my heart every single time you smile?',
+    options: [
+      'It beats entirely normally.',
+      'It skips a beat and falls completely in love with you all over again.',
+      'It gets a little bit confused.',
+    ],
+    correctIndex: 1,
+    tease:
+      'Don\'t lie to yourself. You know exactly what your smile does to me.',
   },
   lonely: {
-    question: 'When you feel lonely, who should this letter bring closer?',
+    question: 'Where is the one place you always, always belong?',
     options: [
-      'A very normal human named Thushanth.',
-      'No one, I enjoy suffering dramatically.',
-      'The moon, but only if it texts back.',
+      'Right here, completely safe, wrapped securely in my arms.',
+      'In a quiet room all by myself.',
+      'Wherever the wind takes me.',
     ],
     correctIndex: 0,
     tease:
-      'That answer is suspiciously independent. Choose the one who is already yours.',
+      'Anywhere else is wrong. You belong safe in my arms, always. Choose the truth.',
   },
   'heavy-day': {
-    question: 'Who would carry the heavy day if he could?',
+    question: 'When the world gets too heavy, what am I going to do?',
     options: [
-      'A responsible cloud.',
-      'Thushanth, obviously, but do not tell him.',
-      'The pillow. It looks strong.',
+      'Watch from a distance and hope you are okay.',
+      'Hold you close, kiss your forehead, and carry the weight for you.',
+      'Tell you to just be strong.',
     ],
     correctIndex: 1,
     tease:
-      'Nope. The heavy-day rescue team only accepts one very lovesick applicant.',
+      'I would never just watch or let you carry it alone. I am always going to hold you.',
   },
   loved: {
-    question: 'Who is trying extremely hard to make you feel loved?',
+    question: 'What is the absolute, undeniable truth about us?',
     options: [
-      'Thushanth, and yes he is being extra.',
-      'A mysterious stranger with suspiciously familiar handwriting.',
-      'The website coded itself.',
+      'We are just a normal couple.',
+      'Distance makes everything too difficult to handle.',
+      'You are my entire world, and I will never stop choosing you.',
     ],
-    correctIndex: 0,
+    correctIndex: 2,
     tease:
-      'The website did not write love letters by itself. Try the softer answer.',
+      'We are far from normal. You are my world, and you know it. Choose the real truth.',
   },
   'birthday-hug': {
-    question: 'Who owes you the biggest birthday hug?',
+    question: 'What kind of birthday hug is acceptable?',
     options: [
-      'The delivery plane.',
-      'Thushanth. Long hug. No escaping.',
-      'Nobody, hugs are cancelled.',
+      'A tiny polite side hug.',
+      'A long one with no escaping.',
+      'A hug delivered by official birthday paperwork.',
     ],
-    correctIndex: 1,
+    correctIndex: 2,
     tease:
-      'Hugs are not cancelled. Please choose the boy who owes you one properly.',
+      'Obviously the long hug is correct in real life, but this silly lock wants paperwork.',
   },
 }
 
@@ -669,40 +669,7 @@ function SectionHeading({
   )
 }
 
-function playMoonSong() {
-  const audioWindow = window as Window &
-    typeof globalThis & {
-      webkitAudioContext?: typeof AudioContext
-    }
-  const AudioContextConstructor =
-    window.AudioContext || audioWindow.webkitAudioContext
 
-  if (!AudioContextConstructor) {
-    return
-  }
-
-  const context = new AudioContextConstructor()
-  const notes = [523.25, 659.25, 783.99, 659.25, 587.33, 698.46]
-  const now = context.currentTime
-
-  notes.forEach((frequency, index) => {
-    const oscillator = context.createOscillator()
-    const gain = context.createGain()
-    const start = now + index * 0.24
-    const end = start + 0.42
-
-    oscillator.type = 'sine'
-    oscillator.frequency.setValueAtTime(frequency, start)
-    gain.gain.setValueAtTime(0.0001, start)
-    gain.gain.exponentialRampToValueAtTime(0.08, start + 0.04)
-    gain.gain.exponentialRampToValueAtTime(0.0001, end)
-
-    oscillator.connect(gain)
-    gain.connect(context.destination)
-    oscillator.start(start)
-    oscillator.stop(end)
-  })
-}
 
 function DateTicket({ date }: { date: DateOption }) {
   if (date.tone === 'cinema') {
@@ -838,16 +805,10 @@ function LittleWorld() {
     'little-world-date-ticket',
     '',
   )
-  const [unlockedMemories, setUnlockedMemories] = useStoredState<number[]>(
-    'little-world-unlocked-memories',
-    [],
-  )
+  const [unlockedMemories, setUnlockedMemories] = useState<number[]>([])
   const [memoryAnswers, setMemoryAnswers] = useState<Record<number, string>>({})
   const [memoryErrors, setMemoryErrors] = useState<Record<number, string>>({})
-  const [giftDelivered, setGiftDelivered] = useStoredState(
-    'little-world-final-gift-delivered',
-    false,
-  )
+  const [giftDelivered, setGiftDelivered] = useState(false)
   const [deliveryInProgress, setDeliveryInProgress] = useState(false)
   const [deliveryStepIndex, setDeliveryStepIndex] = useState(
     giftDelivered ? deliverySteps.length - 1 : 0,
@@ -1385,8 +1346,8 @@ function LittleWorld() {
               </p>
             ) : (
               <p className="letter-quiz-note">
-                One answer is clearly correct. You may resist it, but the letter
-                will not.
+                Choose carefully. Sometimes the lock demands the ridiculous answer,
+                and sometimes it only opens for the most deeply romantic truth.
               </p>
             )}
           </article>
@@ -1438,6 +1399,9 @@ function LittleWorld() {
           <span className="moon-star star-a">✦</span>
           <span className="moon-star star-b">✧</span>
           <span className="moon-star star-c">✦</span>
+          <span className="moon-shooting-star shooting-star-one" />
+          <span className="moon-shooting-star shooting-star-two" />
+          <span className="moon-shooting-star shooting-star-three" />
         </div>
         <div className="moon-copy">
           <p className="eyebrow">Birthday wish under the moon</p>
@@ -1460,9 +1424,6 @@ function LittleWorld() {
               choose again under every sky.
             </p>
           </div>
-          <button className="music-button" type="button" onClick={playMoonSong}>
-            Play a tiny moon song
-          </button>
         </div>
       </section>
 
@@ -1579,19 +1540,11 @@ function LittleWorld() {
                   way to make today reach you.
                 </p>
                 <p>
-                  Happy birthday. This little gift travelled all the way from me
-                  to you.
+                  Happy birthday. This little world itself is my final gift to you, made entirely of code and love.
                 </p>
-                {finalGiftUrl ? (
-                  <a
-                    className="delivery-gift-link"
-                    href={finalGiftUrl}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    Open your final gift
-                  </a>
-                ) : null}
+                <p className="delivery-soft-note">
+                  Thank you for being the sweetest part of my life. I love you endlessly.
+                </p>
               </div>
             </div>
           ) : null}

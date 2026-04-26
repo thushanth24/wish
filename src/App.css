@@ -1948,6 +1948,34 @@ button {
     repeating-linear-gradient(0deg, transparent 0 31px, rgba(221, 145, 160, 0.12) 31px 32px);
 }
 
+@keyframes slowMoonGlow {
+  0%, 100% {
+    box-shadow: 0 0 40px rgba(255, 242, 198, 0.62), 0 0 100px rgba(255, 242, 198, 0.25);
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    box-shadow: 0 0 60px rgba(255, 242, 198, 0.8), 0 0 140px rgba(255, 242, 198, 0.35);
+    transform: translate(-50%, -50%) scale(1.02);
+  }
+}
+
+@keyframes shootingStar {
+  0% { transform: translateX(0) translateY(0) rotate(-45deg); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translateX(-400px) translateY(400px) rotate(-45deg); opacity: 0; }
+}
+
+@keyframes wishLetterGleam {
+  0%, 100% {
+    border-color: rgba(255, 255, 255, 0.28);
+    box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+  50% {
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 10px 30px rgba(255, 255, 255, 0.12);
+  }
+}
+
 .moon-section {
   align-items: center;
   background:
@@ -1966,6 +1994,7 @@ button {
 }
 
 .moon {
+  animation: slowMoonGlow 6s ease-in-out infinite;
   background: #fff2c6;
   border-radius: 999px;
   box-shadow:
@@ -2010,6 +2039,38 @@ button {
   left: 28%;
 }
 
+.moon-shooting-star {
+  position: absolute;
+  width: 140px;
+  height: 2px;
+  background: linear-gradient(-45deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
+  border-radius: 999px;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.9));
+  animation: shootingStar 4s infinite linear;
+  opacity: 0;
+}
+
+.shooting-star-one {
+  top: 10%;
+  right: 15%;
+  animation-delay: 2s;
+  animation-duration: 4.5s;
+}
+
+.shooting-star-two {
+  top: 25%;
+  right: -5%;
+  animation-delay: 6s;
+  animation-duration: 3.8s;
+}
+
+.shooting-star-three {
+  top: -5%;
+  right: 40%;
+  animation-delay: 9s;
+  animation-duration: 4.2s;
+}
+
 .moon-copy {
   max-width: 700px;
   position: relative;
@@ -2028,6 +2089,8 @@ button {
 }
 
 .wish-letter {
+  animation: wishLetterGleam 5s ease-in-out infinite;
+  backdrop-filter: blur(6px);
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 8px;
