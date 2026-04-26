@@ -1,0 +1,101 @@
+:root {
+  --text: #5f5863;
+  --text-strong: #3f3844;
+  --bg: #fffaf4;
+  --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', sans-serif;
+  --serif: Georgia, 'Times New Roman', serif;
+
+  color: var(--text);
+  background: var(--bg);
+  font-family: var(--sans);
+  font-size: 18px;
+  font-synthesis: none;
+  font-weight: 400;
+  line-height: 1.45;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg);
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+h1,
+h2 {
+  color: var(--text-strong);
+  font-family: var(--serif);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.08;
+}
+
+h1 {
+  font-size: 4rem;
+  margin: 0 0 22px;
+}
+
+h2 {
+  font-size: 3rem;
+}
+
+p {
+  margin: 0;
+}
+
+button,
+input,
+a {
+  min-width: 0;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 3px solid rgba(156, 113, 197, 0.5);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: #f7c7d3;
+  color: #4a3b46;
+}
+
+@media (max-width: 820px) {
+  :root {
+    font-size: 16px;
+  }
+
+  h1 {
+    font-size: 2.7rem;
+  }
+
+  h2 {
+    font-size: 2.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 2.25rem;
+  }
+
+  h2 {
+    font-size: 1.95rem;
+  }
+}
